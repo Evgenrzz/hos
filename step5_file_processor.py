@@ -15,13 +15,19 @@ import mysql.connector
 from mysql.connector import Error
 import re
 from playwright.async_api import async_playwright
-
-# Конфигурация базы данных
-DB_CONFIG = {
-    'host': 'localhost',
-    'database': 'your_database_name',  # Замените на реальное имя БД
-    'user': 'your_username',           # Замените на реальный логин
-    'password': 'your_password'        # Замените на реальный пароль
+# Конфигурация базы данных - импортируем из config.py
+try:
+    from config import DB_CONFIG
+    print("✅ Конфигурация загружена из config.py")
+except ImportError:
+    print("⚠️ Файл config.py не найден, используем настройки по умолчанию")
+    print("📝 Создайте config.py на основе config_example.py")
+    DB_CONFIG = {
+        'host': 'localhost',
+        'database': 'your_database_name',  # Замените на реальное имя БД
+        'user': 'your_username',           # Замените на реальный логин
+        'password': 'your_password'        # Замените на реальный пароль
+    }
 }
 
 # Путь к файлу со ссылками

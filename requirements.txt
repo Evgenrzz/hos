@@ -1,11 +1,2 @@
 playwright==1.40.0
 mysql-connector-python==8.2.0
-asyncio
-pathlib
-hashlib
-re
-datetime
-time
-os
-sys
-
