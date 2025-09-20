@@ -114,6 +114,40 @@ class FileProcessor:
         print(f"📝 Нормализованное имя: {normalized_filename}")
         return normalized_filename
 
+    def format_filename_for_attachment(self, filename):
+        """Форматируем имя файла для поля apk-original"""
+        print(f"📝 Форматируем для attachment: {filename}")
+        
+        # Разделяем имя файла и расширение
+        name_part, extension = os.path.splitext(filename)
+        
+        # Убираем подчеркивания и заменяем на пробелы
+        name_part = name_part.replace('_', ' ')
+        
+        # Убираем лишние символы +-+
+        name_part = name_part.replace('+-+', ' ')
+        name_part = name_part.replace('+', ' ')
+        name_part = name_part.replace('-', ' ')
+        
+        # Убираем множественные пробелы
+        name_part = re.sub(r'\s+', ' ', name_part).strip()
+        
+        # Восстанавливаем точки в версии (ищем паттерны типа "1 8 3" и заменяем на "1.8.3")
+        # Ищем последовательности цифр разделенных пробелами в конце строки
+        version_pattern = r'(\d+)\s+(\d+)\s+(\d+)(?:\s+(\d+))?(?:\s+(\d+))?$'
+        match = re.search(version_pattern, name_part)
+        if match:
+            # Заменяем найденную версию на правильный формат с точками
+            version_parts = [part for part in match.groups() if part is not None]
+            version_str = '.'.join(version_parts)
+            name_part = re.sub(version_pattern, version_str, name_part)
+        
+        # Собираем обратно
+        formatted_filename = f"{name_part}{extension}"
+        
+        print(f"📝 Отформатированное имя: {formatted_filename}")
+        return formatted_filename
+
     def parse_link_line(self, line):
         """Парсим строку из файла step4_links.txt"""
         # Формат: 1,[attachment=861:Apple Music_5.0.0.xapk],https://apkcombo.com/ru/apple-music/com.apple.android.music/
@@ -503,7 +537,11 @@ class FileProcessor:
 
             xfields = result[0]
 
-            # Обновляем поле apk-original
+            # Форматируем имя файла для красивого отображения в attachment
+            formatted_filename = self.format_filename_for_attachment(filename)
+            
+            # Обновляем поле apk-original с отформатированным именем
+            new_attachment = f"[attachment={file_id}:{formatted_filename}]"
             new_attachment = f"[attachment={file_id}:{filename}]"
 
             # Ищем и заменяем существующее поле apk-original
@@ -520,6 +558,7 @@ class FileProcessor:
             update_query = "UPDATE dle_post SET xfields = %s WHERE id = %s"
             cursor.execute(update_query, (new_xfields, news_id))
             self.connection.commit()
+            print(f"📝 Attachment: {new_attachment}")
             cursor.close()
 
             print(f"✅ Обновлено поле apk-original для новости {news_id}")
@@ -700,4 +739,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
